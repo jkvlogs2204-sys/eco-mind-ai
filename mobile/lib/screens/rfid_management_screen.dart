@@ -52,11 +52,21 @@ class _RFIDManagementScreenState extends State<RFIDManagementScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        ProductModel? selectedProduct;
+        ProductModel? selectedProduct = products.isNotEmpty ? products.first : null;
         return AlertDialog(
           title: Text("Assign RFID Tag (${tag.rfidUid})"),
           content: StatefulBuilder(
             builder: (context, setDialogState) {
+              if (products.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12.0),
+                  child: Text(
+                    "No products available in catalog.\nPlease create a product in the Products tab first.",
+                    style: TextStyle(color: Colors.red, fontSize: 13),
+                  ),
+                );
+              }
+
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -87,23 +97,24 @@ class _RFIDManagementScreenState extends State<RFIDManagementScreen> {
               onPressed: () => Navigator.pop(context),
               child: const Text("CANCEL"),
             ),
-            ElevatedButton(
-              onPressed: () async {
-                if (selectedProduct != null) {
-                  final ok = await apiService.assignRFIDTag(tag.rfidUid, selectedProduct!.id);
-                  if (mounted) {
-                    Navigator.pop(context);
-                    if (ok) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Assigned ${tag.rfidUid} to ${selectedProduct!.name}")),
-                      );
-                      _fetchTags();
+            if (products.isNotEmpty)
+              ElevatedButton(
+                onPressed: () async {
+                  if (selectedProduct != null) {
+                    final ok = await apiService.assignRFIDTag(tag.rfidUid, selectedProduct!.id);
+                    if (mounted) {
+                      Navigator.pop(context);
+                      if (ok) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Assigned ${tag.rfidUid} to ${selectedProduct!.name}")),
+                        );
+                        _fetchTags();
+                      }
                     }
                   }
-                }
-              },
-              child: const Text("ASSIGN"),
-            ),
+                },
+                child: const Text("ASSIGN"),
+              ),
           ],
         );
       },

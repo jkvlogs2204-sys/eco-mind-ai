@@ -20,10 +20,10 @@ class ScanHistoryItem {
       id: json['id'] ?? 0,
       rfidUid: json['rfid_uid'] ?? '',
       productName: json['product_name'] ?? 'Scanned Product',
-      ecoScore: (json['eco_score'] ?? 50.0).toDouble(),
-      ecoGrade: json['eco_grade'] ?? 'C',
+      ecoScore: (json['eco_score'] ?? json['score'] ?? 50.0).toDouble(),
+      ecoGrade: json['eco_grade'] ?? json['grade'] ?? 'C',
       timestamp: json['timestamp'] != null
-          ? DateTime.parse(json['timestamp'])
+          ? (DateTime.tryParse(json['timestamp'].toString()) ?? DateTime.now())
           : DateTime.now(),
     );
   }

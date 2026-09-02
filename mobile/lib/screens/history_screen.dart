@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../services/scan_service.dart';
+import '../models/scan_history.dart';
 import '../theme/app_theme.dart';
 import 'result_screen.dart';
 
@@ -54,8 +55,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
             itemCount: history.length,
             itemBuilder: (context, index) {
               final item = history[index];
-              final gradeColor = AppTheme.getGradeColor(item.ecoGrade);
-              final dateStr = DateFormat('MMM dd, yyyy • h:mm a').format(item.timestamp);
+              final String ecoGrade = item is ScanHistoryItem ? item.ecoGrade : (item['eco_grade'] ?? item['grade'] ?? 'C');
+              final String productName = item is ScanHistoryItem ? item.productName : (item['product_name'] ?? 'Product');
+              final String rfidUid = item is ScanHistoryItem ? item.rfidUid : (item['rfid_uid'] ?? '');
+              final double ecoScore = item is ScanHistoryItem ? item.ecoScore : ((item['eco_score'] ?? 0).toDouble());
+              final DateTime date = item is ScanHistoryItem ? item.timestamp : (item['timestamp'] != null ? (DateTime.tryParse(item['timestamp'].toString()) ?? DateTime.now()) : DateTime.now());
+
+              final gradeColor = AppTheme.getGradeColor(ecoGrade);
+              final dateStr = DateFormat('MMM dd, yyyy • h:mm a').format(date);
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -63,7 +70,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   leading: CircleAvatar(
                     backgroundColor: gradeColor.withOpacity(0.15),
                     child: Text(
-                      item.ecoGrade,
+                      ecoGrade,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: gradeColor,
@@ -71,15 +78,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ),
                   ),
                   title: Text(
-                    item.productName,
+                    productName,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: Text("${item.rfidUid} • $dateStr"),
+                  subtitle: Text("$rfidUid • $dateStr"),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        "${item.ecoScore.toInt()}/100",
+                        "${ecoScore.toInt()}/100",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: gradeColor,
@@ -90,11 +97,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ],
                   ),
                   onTap: () {
-                    scanService.analyzeProductByRfid(item.rfidUid);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const ResultScreen()),
-                    );
+                    if (rfidUid.isNotEmpty) {
+                      scanService.analyzeProductByRfid(rfidUid);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ResultScreen()),
+                      );
+                    }
                   },
                 ),
               );
