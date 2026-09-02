@@ -30,7 +30,7 @@
     <application
         android:label="EcoMind AI"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@drawable/ic_launcher">
 
         <activity
             android:name=".MainActivity"
