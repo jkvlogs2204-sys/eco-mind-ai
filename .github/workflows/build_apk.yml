@@ -23,7 +23,7 @@ jobs:
       - name: Set up Flutter SDK
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.x'
+          flutter-version: '3.19.x'
           channel: 'stable'
           cache: true
 
@@ -32,10 +32,9 @@ jobs:
           flutter --version
           java -version
 
-      - name: Prepare Flutter Mobile Project
+      - name: Install dependencies
         run: |
           cd mobile
-          flutter create . --org com.ecomind --project-name ecomind_mobile
           flutter pub get
 
       - name: Build Android Release APK
@@ -43,7 +42,7 @@ jobs:
           cd mobile
           flutter build apk --release --no-tree-shake-icons
 
-      - name: Upload APK as Artifact
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: EcoMind-AI-Mobile-v1.0.apk
