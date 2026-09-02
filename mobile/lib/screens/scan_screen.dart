@@ -15,6 +15,8 @@ class ScanScreen extends StatefulWidget {
 }
 
 class _ScanScreenState extends State<ScanScreen> {
+  bool _isNavigatingToResult = false;
+
   @override
   void initState() {
     super.initState();
@@ -44,13 +46,16 @@ class _ScanScreenState extends State<ScanScreen> {
         builder: (context, scanService, child) {
           final btService = Provider.of<BluetoothService>(context);
 
-          // Auto-navigate to ResultScreen when physical RFID tag is scanned
-          if (scanService.state == ScanState.success) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              Navigator.push(
+          // Auto-navigate to ResultScreen ONCE when a physical RFID tag is scanned
+          if (scanService.state == ScanState.success && !_isNavigatingToResult) {
+            _isNavigatingToResult = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ResultScreen()),
               );
+              scanService.resetScan();
+              _isNavigatingToResult = false;
             });
           }
 
