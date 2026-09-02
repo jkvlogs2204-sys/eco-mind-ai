@@ -51,15 +51,18 @@ class BluetoothService extends ChangeNotifier {
     _initAutoReconnect();
   }
 
-  // ── Auto-reconnect to last known device ────────────────────────────────────
+  // ── Load saved device info without auto-firing un-permitted connection ──
   Future<void> _initAutoReconnect() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedAddress = prefs.getString(_prefAddress);
-    final savedName = prefs.getString(_prefName);
-    if (savedAddress != null && savedAddress.isNotEmpty) {
-      _connectedDeviceName = savedName ?? 'HC-05 Scanner';
-      _connectedDeviceAddress = savedAddress;
-      autoReconnect();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedAddress = prefs.getString(_prefAddress);
+      final savedName = prefs.getString(_prefName);
+      if (savedAddress != null && savedAddress.isNotEmpty) {
+        _connectedDeviceName = savedName ?? 'HC-05 Scanner';
+        _connectedDeviceAddress = savedAddress;
+      }
+    } catch (e) {
+      debugPrint('SharedPreferences init error: $e');
     }
   }
 
@@ -68,25 +71,29 @@ class BluetoothService extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    // Check if Bluetooth is already on
-    final bool? isOn = await FlutterBluetoothSerial.instance.isEnabled;
-    if (isOn != true) {
-      _connState = BluetoothConnState.enablingBluetooth;
-      notifyListeners();
-
-      // This shows the Android "Turn on Bluetooth?" system dialog
-      final bool? enabled =
-          await FlutterBluetoothSerial.instance.requestEnable();
-      if (enabled != true) {
-        _connState = BluetoothConnState.error;
-        _errorMessage =
-            'Bluetooth is OFF. Please enable Bluetooth to connect the HC-05 scanner.';
+    try {
+      final bool? isOn = await FlutterBluetoothSerial.instance.isEnabled;
+      if (isOn != true) {
+        _connState = BluetoothConnState.enablingBluetooth;
         notifyListeners();
-        return;
-      }
-    }
 
-    startDiscovery();
+        final bool? enabled =
+            await FlutterBluetoothSerial.instance.requestEnable();
+        if (enabled != true) {
+          _connState = BluetoothConnState.error;
+          _errorMessage =
+              'Bluetooth is OFF. Please enable Bluetooth to connect the HC-05 scanner.';
+          notifyListeners();
+          return;
+        }
+      }
+
+      startDiscovery();
+    } catch (e) {
+      _connState = BluetoothConnState.error;
+      _errorMessage = 'Bluetooth permission error: $e';
+      notifyListeners();
+    }
   }
 
   // ── Discover nearby Classic Bluetooth devices ───────────────────────────────
@@ -99,14 +106,12 @@ class BluetoothService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Show already-paired (bonded) devices first
       final bonded = await FlutterBluetoothSerial.instance.getBondedDevices();
       for (final device in bonded) {
         _addDiscoveredDevice(device);
       }
       notifyListeners();
 
-      // Active scan for nearby unpaired devices
       _discoverySubscription?.cancel();
       _discoverySubscription =
           FlutterBluetoothSerial.instance.startDiscovery().listen(
@@ -150,7 +155,9 @@ class BluetoothService extends ChangeNotifier {
   }
 
   void stopDiscovery() {
-    _discoverySubscription?.cancel();
+    try {
+      _discoverySubscription?.cancel();
+    } catch (_) {}
     _isSearching = false;
     notifyListeners();
   }
@@ -169,10 +176,11 @@ class BluetoothService extends ChangeNotifier {
       _connectedDeviceAddress = device.address;
       _connState = BluetoothConnState.connected;
 
-      // Save for auto-reconnect next session
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_prefAddress, device.address);
-      await prefs.setString(_prefName, _connectedDeviceName!);
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_prefAddress, device.address);
+        await prefs.setString(_prefName, _connectedDeviceName!);
+      } catch (_) {}
 
       notifyListeners();
       _listenToStream();
@@ -180,8 +188,7 @@ class BluetoothService extends ChangeNotifier {
     } catch (e) {
       _connState = BluetoothConnState.failed;
       _errorMessage = 'Cannot connect to ${device.name ?? 'HC-05'}: $e\n\n'
-          'Tip: Make sure HC-05 is powered ON and paired with this phone first '
-          '(go to Phone Settings → Bluetooth → Pair new device → select HC-05).';
+          'Tip: Make sure HC-05 is powered ON and paired in Phone Settings.';
       notifyListeners();
       return false;
     }
@@ -194,19 +201,21 @@ class BluetoothService extends ChangeNotifier {
     }
     if (isConnected) return true;
 
-    _connState = BluetoothConnState.connecting;
-    notifyListeners();
-
     try {
+      final bool? isOn = await FlutterBluetoothSerial.instance.isEnabled;
+      if (isOn != true) return false;
+
+      _connState = BluetoothConnState.connecting;
+      notifyListeners();
+
       _connection =
           await BluetoothConnection.toAddress(_connectedDeviceAddress!);
       _connState = BluetoothConnState.connected;
       notifyListeners();
       _listenToStream();
       return true;
-    } catch (_) {
+    } catch (e) {
       _connState = BluetoothConnState.disconnected;
-      _connectedDeviceAddress = null;
       notifyListeners();
       return false;
     }
@@ -214,22 +223,26 @@ class BluetoothService extends ChangeNotifier {
 
   // ── Read PRODUCT:<UID>\n lines from HC-05 serial stream ────────────────────
   void _listenToStream() {
-    _connection?.input?.listen(
-      (Uint8List data) {
-        _buffer += ascii.decode(data);
-        while (_buffer.contains('\n')) {
-          final idx = _buffer.indexOf('\n');
-          final line = _buffer.substring(0, idx).trim();
-          _buffer = _buffer.substring(idx + 1);
-          if (line.isNotEmpty) _handleIncomingLine(line);
-        }
-      },
-      onDone: () => _handleDisconnectEvent(),
-      onError: (e) {
-        _errorMessage = 'Bluetooth stream error: $e';
-        _handleDisconnectEvent();
-      },
-    );
+    try {
+      _connection?.input?.listen(
+        (Uint8List data) {
+          _buffer += ascii.decode(data);
+          while (_buffer.contains('\n')) {
+            final idx = _buffer.indexOf('\n');
+            final line = _buffer.substring(0, idx).trim();
+            _buffer = _buffer.substring(idx + 1);
+            if (line.isNotEmpty) _handleIncomingLine(line);
+          }
+        },
+        onDone: () => _handleDisconnectEvent(),
+        onError: (e) {
+          _errorMessage = 'Bluetooth stream error: $e';
+          _handleDisconnectEvent();
+        },
+      );
+    } catch (e) {
+      _handleDisconnectEvent();
+    }
   }
 
   void _handleIncomingLine(String line) {
@@ -254,10 +267,11 @@ class BluetoothService extends ChangeNotifier {
   Future<void> disconnect() async {
     stopDiscovery();
     _handleDisconnectEvent();
-    // Clear saved device so no auto-reconnect next launch
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_prefAddress);
-    await prefs.remove(_prefName);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_prefAddress);
+      await prefs.remove(_prefName);
+    } catch (_) {}
     _connectedDeviceName = null;
     _connectedDeviceAddress = null;
     notifyListeners();
@@ -266,12 +280,13 @@ class BluetoothService extends ChangeNotifier {
   @override
   void dispose() {
     stopDiscovery();
-    _connection?.dispose();
-    _rfidStreamController.close();
+    try {
+      _connection?.dispose();
+      _rfidStreamController.close();
+    } catch (_) {}
     super.dispose();
   }
 
-  /// Called by getPairedDevices for legacy BluetoothScreen
   Future<List<BluetoothDevice>> getPairedDevices() async {
     try {
       return await FlutterBluetoothSerial.instance.getBondedDevices();
