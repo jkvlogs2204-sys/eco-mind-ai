@@ -26,7 +26,7 @@ class RFIDTagModel {
       productName: json['product_name'],
       category: json['category'],
       createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
+          ? (DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now())
           : DateTime.now(),
     );
   }
