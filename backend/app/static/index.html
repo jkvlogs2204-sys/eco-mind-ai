@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoMind AI</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <style>
+    :root {
+      --green: #0F5132;
+      --green-light: #D1E7DD;
+      --green-mid: #198754;
+    }
+    body { background: #F1F5F9; font-family: 'Segoe UI', system-ui, sans-serif; padding-bottom: 50px; }
+
+    /* ── Header ─────────────────────────────────── */
+    .top-bar {
+      background: var(--green);
+      color: white;
+      padding: 18px 20px 22px;
+      border-radius: 0 0 24px 24px;
+    }
+
+    /* ── Connection Screen (shown when disconnected) ── */
+    #connectScreen { display: block; }
+    #appScreen     { display: none; }
+
+    .connect-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+      overflow: hidden;
+    }
+    .connect-header {
+      background: var(--green);
+      color: white;
+      padding: 28px 24px;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 50px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid #F1F5F9;
+    }
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--green-light);
+      color: var(--green);
+      font-weight: bold;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .btn-connect-main {
+      background: var(--green);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: bold;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-connect-main:hover { background: #0A3622; }
+    .btn-connect-main:disabled { background: #6c757d; cursor: not-allowed; }
+
+    /* ── App Screen ─────────────────────────────── */
+    .nav-bar { background: white; border-radius: 14px; padding: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .nav-btn { border: none; background: transparent; border-radius: 10px; padding: 8px 16px; font-weight: bold; color: var(--green); cursor: pointer; font-size: 13px; }
+    .nav-btn.active { background: var(--green); color: white; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .card-c { background: white; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); padding: 20px; margin-bottom: 16px; }
+    .score-ring { width: 130px; height: 130px; border-radius: 50%; border: 8px solid var(--green-mid); display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto; background: #F8FAFC; }
+    .grade-badge { padding: 4px 16px; border-radius: 20px; color: white; font-weight: bold; display: inline-block; }
+    .metric-bar { height: 6px; border-radius: 3px; }
+    #logBox { background: #1E293B; color: #86efac; font-family: monospace; font-size: 11px; border-radius: 10px; padding: 12px; max-height: 110px; overflow-y: auto; }
+    .pulse { animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{transform:scale(0.97);opacity:.9} 50%{transform:scale(1.03);opacity:1} }
+
+    /* ── Connected status banner in app ─────────── */
+    .conn-bar {
+      background: var(--green);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     TOP BAR
+════════════════════════════════════════════════════════════════════ -->
+<div class="top-bar">
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <h4 class="fw-bold mb-0"><i class="bi bi-cpu"></i> EcoMind AI</h4>
+      <small class="text-white-50">Physical RFID · HC-05 · Eco Score · Gemini AI</small>
+    </div>
+    <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">
+      <i class="bi bi-globe"></i> SDG 12
+    </span>
+  </div>
+</div>
+
+<div class="container mt-4" style="max-width:700px;">
+
+<!-- ════════════════════════════════════════════════════════════════════
+     CONNECT SCREEN  (shown when HC-05 not connected)
+════════════════════════════════════════════════════════════════════ -->
+<div id="connectScreen">
+  <div class="connect-card mb-4">
+
+    <!-- Header -->
+    <div class="connect-header">
+      <div class="d-flex align-items-center gap-3 mb-2">
+        <i class="bi bi-bluetooth fs-2"></i>
+        <div>
+          <h5 class="fw-bold mb-0">Connect HC-05 Scanner</h5>
+          <small class="text-white-50">Connect your EcoMind RFID scanner to begin scanning products.</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-4">
+
+      <!-- Live Status -->
+      <div id="connStatusBox" class="mb-4">
+        <div class="status-pill bg-light text-secondary w-100 justify-content-center" id="statusPill">
+          <i class="bi bi-bluetooth-disabled fs-5"></i>
+          <span id="statusText">Not Connected — Click the button below to find HC-05</span>
+        </div>
+      </div>
+
+      <!-- Main Connect / Disconnect Button -->
+      <button class="btn-connect-main mb-3" id="mainConnBtn" onclick="toggleSerialConnection()">
+        <i class="bi bi-bluetooth" id="mainBtnIcon"></i>
+        <span id="mainBtnText">🔍 SCAN &amp; CONNECT TO HC-05</span>
+      </button>
+
+      <!-- Error message box -->
+      <div id="errorBox" class="alert alert-danger py-2 small d-none">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span id="errorMsg"></span>
+      </div>
+
+      <!-- Divider -->
+      <hr class="my-3">
+
+      <!-- How It Works Steps -->
+      <h6 class="fw-bold text-secondary mb-3"><i class="bi bi-list-check"></i> How to Connect</h6>
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="small text-secondary">
+          <strong class="text-dark">Pair HC-05 in Windows Bluetooth Settings.</strong><br>
+          Go to <em>Settings → Bluetooth → Add device</em> → select <strong>HC-05</strong> → PIN: <code>1234</code>.<br>
+          After pairing it appears as a <strong>COM port</strong> (e.g. COM5).
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="small text-secondary">
+          <strong class="text-dark">Power ON your Arduino + MFRC522 circuit.</strong><br>
+          The HC-05 LED should blink rapidly — it's ready to pair.
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="small text-secondary">
+          <strong class="text-dark">Click "SCAN &amp; CONNECT TO HC-05" above.</strong><br>
+          A native browser dialog opens — select your <strong>HC-05 COM port</strong> and click Connect.
+        </div>
+      </div>
+      <div class="step-item border-0">
+        <div class="step-num">4</div>
+        <div class="small text-secondary">
+          <strong class="text-dark">Tap RFID tags!</strong><br>
+          Results appear instantly — no refresh needed.
+        </div>
+      </div>
+
+      <!-- Browser warning -->
+      <div class="alert alert-warning py-2 mt-3 mb-0 small">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <strong>Requires Google Chrome or Microsoft Edge.</strong>
+        Web Serial API is not supported in Firefox or Safari.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     APP SCREEN  (shown when HC-05 is connected)
+════════════════════════════════════════════════════════════════════ -->
+<div id="appScreen">
+
+  <!-- Connected Status Bar -->
+  <div class="conn-bar">
+    <div class="d-flex align-items-center gap-2">
+      <i class="bi bi-bluetooth-connected fs-5"></i>
+      <div>
+        <div class="fw-bold small" id="connBarName">HC-05 Connected</div>
+        <div style="font-size:11px;opacity:.8;">RFID Scanner Active — Tap a tag!</div>
+      </div>
+    </div>
+    <button class="btn btn-sm btn-outline-light fw-bold" onclick="disconnectSerial()">
+      <i class="bi bi-x-circle"></i> Disconnect
+    </button>
+  </div>
+
+  <!-- Tab Nav -->
+  <div class="nav-bar d-flex gap-1 mb-3">
+    <button class="nav-btn active flex-fill" onclick="showTab('scanTab', this)">
+      <i class="bi bi-nfc"></i> Live Scanner
+    </button>
+    <button class="nav-btn flex-fill" onclick="showTab('rfidTab', this); loadRfidTags()">
+      <i class="bi bi-tags"></i> RFID Tags
+    </button>
+    <button class="nav-btn flex-fill" onclick="showTab('productTab', this); loadProducts()">
+      <i class="bi bi-box-seam"></i> Products
+    </button>
+  </div>
+
+  <!-- ── SCAN TAB ──────────────────────────────────────────────────── -->
+  <div class="tab-panel active" id="scanTab">
+
+    <!-- Serial Stream Log -->
+    <div class="card-c mb-0">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="fw-bold small text-success pulse">
+          <i class="bi bi-reception-4"></i> Live HC-05 Serial Stream
+        </span>
+        <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('logBox').innerHTML=''">Clear</button>
+      </div>
+      <div id="logBox"></div>
+      <p class="text-muted small mt-2 mb-0 text-center">
+        <i class="bi bi-nfc"></i> Tap any registered RFID tag on the MFRC522 reader...
+      </p>
+    </div>
+
+    <!-- Result Section -->
+    <div id="resultSection" style="display:none;" class="mt-3">
+      <div class="card-c">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span id="prodCategory" class="badge bg-secondary text-uppercase small"></span>
+          <span id="prodDataStatus" class="badge bg-success small">VERIFIED REAL DATA</span>
+        </div>
+        <h4 id="prodName" class="fw-bold mb-0"></h4>
+        <p id="prodSub" class="text-muted small mb-0"></p>
+      </div>
+
+      <div class="card-c text-center">
+        <h6 class="fw-bold text-secondary mb-3 text-uppercase">Eco Score</h6>
+        <div class="score-ring mb-3" id="scoreRing">
+          <span id="scoreVal" class="display-5 fw-bold text-success">--</span>
+          <small class="text-muted fw-bold">/ 100</small>
+        </div>
+        <span id="gradeBadge" class="grade-badge bg-success mb-2">GRADE --</span>
+        <h5 id="decisionText" class="fw-bold text-success mt-2 mb-1"></h5>
+        <p id="explanationText" class="text-secondary small px-2 mb-0"></p>
+      </div>
+
+      <div class="card-c border-start border-4 border-warning">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold text-success mb-0"><i class="bi bi-magic text-warning me-1"></i> EcoMind AI Insight</h6>
+          <span id="aiSource" class="badge bg-warning text-dark">Gemini AI</span>
+        </div>
+        <p id="aiInsightText" class="text-secondary small mb-2"></p>
+        <div class="fw-bold small text-danger mb-1">Key Footprint Drivers:</div>
+        <ul id="aiImpactList" class="small text-secondary mb-2 ps-3"></ul>
+        <div class="fw-bold small text-success mb-1">Sustainability Actions:</div>
+        <ul id="aiIdeasList" class="small text-secondary mb-0 ps-3"></ul>
+      </div>
+
+      <div class="card-c">
+        <h6 class="fw-bold text-secondary mb-3"><i class="bi bi-tree"></i> ENVIRONMENTAL IMPACT</h6>
+        <div class="mb-2"><div class="d-flex justify-content-between small fw-bold mb-1"><span>Carbon Footprint</span><span id="carbonVal" class="text-primary"></span></div><div class="progress metric-bar"><div id="carbonBar" class="progress-bar bg-primary"></div></div></div>
+        <div class="mb-2"><div class="d-flex justify-content-between small fw-bold mb-1"><span>Water Footprint</span><span id="waterVal" class="text-info"></span></div><div class="progress metric-bar"><div id="waterBar" class="progress-bar bg-info"></div></div></div>
+        <div class="mb-2"><div class="d-flex justify-content-between small fw-bold mb-1"><span>Packaging</span><span id="pkgVal" class="text-warning"></span></div><div class="progress metric-bar"><div id="pkgBar" class="progress-bar bg-warning"></div></div></div>
+        <div class="mb-2"><div class="d-flex justify-content-between small fw-bold mb-1"><span>Recyclability</span><span id="recycVal" class="text-success"></span></div><div class="progress metric-bar"><div id="recycBar" class="progress-bar bg-success"></div></div></div>
+        <div><div class="d-flex justify-content-between small fw-bold mb-1"><span>Reuse &amp; Lifespan</span><span id="reuseVal" style="color:purple;"></span></div><div class="progress metric-bar"><div id="reuseBar" class="progress-bar" style="background:purple;"></div></div></div>
+      </div>
+
+      <div id="altCard" class="card-c border border-success bg-light" style="display:none;">
+        <div class="d-flex align-items-center text-success fw-bold mb-1">
+          <i class="bi bi-arrow-up-right-circle-fill me-2"></i> BETTER ALTERNATIVE
+        </div>
+        <h5 id="altName" class="fw-bold mb-1"></h5>
+        <small id="altReason" class="text-secondary"></small>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RFID TAGS TAB ─────────────────────────────────────────────── -->
+  <div class="tab-panel" id="rfidTab">
+    <div class="card-c">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="fw-bold text-success mb-0"><i class="bi bi-nfc"></i> RFID Tag Management</h6>
+        <button class="btn btn-sm btn-success rounded-pill" data-bs-toggle="modal" data-bs-target="#registerRfidModal">
+          <i class="bi bi-plus-lg"></i> Register Tag
+        </button>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle small">
+          <thead class="table-light"><tr><th>UID</th><th>Status</th><th>Product</th><th>Actions</th></tr></thead>
+          <tbody id="rfidTableBody"><tr><td colspan="4" class="text-center text-muted">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PRODUCTS TAB ──────────────────────────────────────────────── -->
+  <div class="tab-panel" id="productTab">
+    <div class="card-c">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="fw-bold text-success mb-0"><i class="bi bi-box-seam"></i> Product Catalog &amp; AI Search</h6>
+        <button class="btn btn-sm btn-success rounded-pill" data-bs-toggle="modal" data-bs-target="#addProductModal">
+          <i class="bi bi-plus-lg"></i> Add Product
+        </button>
+      </div>
+
+      <!-- AI Search Bar -->
+      <div class="mb-3">
+        <div class="input-group">
+          <span class="input-group-text bg-success text-white border-0"><i class="bi bi-magic"></i> AI Search</span>
+          <input type="text" id="aiSearchInput" class="form-control border-start-0" placeholder="Ask AI e.g. 'low carbon beverages', 'glass recyclable', 'best eco score'..." onkeyup="if(event.key==='Enter') executeAiSearch()">
+          <button class="btn btn-success" onclick="executeAiSearch()"><i class="bi bi-search"></i> Search</button>
+          <button class="btn btn-outline-secondary" onclick="resetAiSearch()"><i class="bi bi-x-circle"></i> Reset</button>
+        </div>
+        <!-- Quick Preset Filter Chips -->
+        <div class="d-flex gap-1 flex-wrap mt-2">
+          <small class="text-muted fw-bold align-self-center me-1">Quick Filters:</small>
+          <span class="badge bg-light text-dark border cursor-pointer" onclick="setQuickSearch('low carbon')">🌱 Low Carbon</span>
+          <span class="badge bg-light text-dark border cursor-pointer" onclick="setQuickSearch('high recyclability')">♻️ Recyclable</span>
+          <span class="badge bg-light text-dark border cursor-pointer" onclick="setQuickSearch('Beverages')">🥤 Beverages</span>
+          <span class="badge bg-light text-dark border cursor-pointer" onclick="setQuickSearch('Steel')">🧪 Steel / Reusable</span>
+          <span class="badge bg-light text-dark border cursor-pointer" onclick="setQuickSearch('high score')">⭐ Top Eco Score</span>
+        </div>
+      </div>
+
+      <!-- AI Search Interpretation Banner -->
+      <div id="aiSearchBanner" class="alert alert-info py-2 px-3 small d-none mb-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <i class="bi bi-cpu-fill text-primary me-1"></i> <strong id="aiBannerTitle">Gemini AI Search</strong>
+            <div id="aiBannerDetail" class="text-secondary"></div>
+          </div>
+          <span id="aiBannerBadge" class="badge bg-primary">AI Natural Language</span>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle small">
+          <thead class="table-light">
+            <tr>
+              <th>Product &amp; Brand</th>
+              <th>Category &amp; Material</th>
+              <th>Carbon (CO2e)</th>
+              <th>Water (Litres)</th>
+              <th>Eco Score</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="productTableBody"><tr><td colspan="6" class="text-center text-muted">Loading product catalog...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end #appScreen -->
+</div><!-- end container -->
+
+<!-- ── Modals ──────────────────────────────────────────────────────── -->
+<div class="modal fade" id="registerRfidModal" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content rounded-4">
+    <div class="modal-header"><h5 class="modal-title fw-bold">Register RFID Tag</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body"><input type="text" id="newRfidUid" class="form-control" placeholder="RFID UID e.g. A1B2C3D4"></div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-success" onclick="submitRegisterRfid()">Register</button></div>
+  </div></div>
+</div>
+
+<div class="modal fade" id="addProductModal" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content rounded-4">
+    <div class="modal-header"><h5 class="modal-title fw-bold">Add Product</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body row g-2">
+      <div class="col-12"><input type="text" id="npName" class="form-control" placeholder="Product Name"></div>
+      <div class="col-6"><input type="text" id="npBrand" class="form-control" placeholder="Brand"></div>
+      <div class="col-6"><input type="text" id="npCat" class="form-control" placeholder="Category"></div>
+      <div class="col-6"><input type="text" id="npMat" class="form-control" placeholder="Material"></div>
+      <div class="col-6"><input type="text" id="npPkg" class="form-control" placeholder="Packaging"></div>
+      <div class="col-6"><input type="number" step="0.01" id="npCarbon" class="form-control" placeholder="Carbon (kg CO2e)"></div>
+      <div class="col-6"><input type="number" step="0.01" id="npWater" class="form-control" placeholder="Water (litres)"></div>
+      <div class="col-4"><input type="number" id="npRecyc" class="form-control" placeholder="Recyclability %"></div>
+      <div class="col-4"><input type="number" id="npReuse" class="form-control" placeholder="Reuse %"></div>
+      <div class="col-4"><input type="number" id="npLifespan" class="form-control" placeholder="Lifespan (days)"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-success" onclick="submitAddProduct()">Save</button></div>
+  </div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ════════════════════════════════════════════════════════════════════
+//  TAB SWITCHING
+// ════════════════════════════════════════════════════════════════════
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  WEB SERIAL API — Real HC-05 Classic Bluetooth Connection
+// ════════════════════════════════════════════════════════════════════
+let serialPort = null;
+let serialReader = null;
+let serialReadActive = false;
+let lineBuffer = '';
+let lastUID = '';
+let lastScanTime = 0;
+const COOLDOWN_MS = 2500;
+
+async function toggleSerialConnection() {
+  if (serialPort) {
+    await disconnectSerial();
+  } else {
+    await connectSerial();
+  }
+}
+
+async function connectSerial() {
+  // Check browser support
+  if (!('serial' in navigator)) {
+    setStatus('error', 'Web Serial API not supported. Please open this page in Google Chrome or Microsoft Edge.');
+    showError('Web Serial API is not available in this browser. Use Google Chrome or Edge.');
+    return;
+  }
+
+  setStatus('scanning', 'Opening COM port picker — select your HC-05 port...');
+  setMainBtn(true, 'Waiting for port selection...');
+
+  try {
+    // ✅ This opens the native browser COM port dialog — user picks HC-05 COM port
+    serialPort = await navigator.serial.requestPort();
+    await serialPort.open({ baudRate: 9600 });
+
+    setStatus('connected', `HC-05 Connected — Baud 9600 — RFID Scanner Active`);
+    showConnectedScreen();
+    logSerial('✅ HC-05 serial port opened (9600 baud). Listening for RFID tags...');
+
+    // Notify backend
+    fetch('/api/bluetooth/connect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ device_name: 'HC-05 Web Serial' })
+    });
+
+    serialReadActive = true;
+    startReading();
+
+  } catch (err) {
+    serialPort = null;
+    if (err.name === 'NotFoundError') {
+      // User cancelled the picker — reset quietly
+      setStatus('disconnected', 'No port selected. Click the button to try again.');
+      setMainBtn(false);
+    } else {
+      setStatus('error', 'Could not open port: ' + err.message);
+      showError('Could not open COM port: ' + err.message +
+        '\n\nMake sure HC-05 is paired in Windows Bluetooth settings and the COM port is available.');
+      setMainBtn(false);
+    }
+  }
+}
+
+async function disconnectSerial() {
+  serialReadActive = false;
+  try { if (serialReader) { await serialReader.cancel(); serialReader = null; } } catch(e){}
+  try { if (serialPort) { await serialPort.close(); serialPort = null; } } catch(e){}
+
+  fetch('/api/bluetooth/disconnect', { method: 'POST' });
+
+  showDisconnectedScreen();
+  setStatus('disconnected', 'Disconnected — Click the button to reconnect.');
+  logSerial('🔌 Serial port disconnected.');
+}
+
+// ── Screen switching ─────────────────────────────────────────────────
+function showConnectedScreen() {
+  document.getElementById('connectScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'block';
+  document.getElementById('connBarName').textContent = '🟢 HC-05 Connected — Live RFID Stream';
+  hideError();
+}
+
+function showDisconnectedScreen() {
+  document.getElementById('connectScreen').style.display = 'block';
+  document.getElementById('appScreen').style.display = 'none';
+  document.getElementById('resultSection').style.display = 'none';
+  setMainBtn(false);
+}
+
+// ── Status pill states ───────────────────────────────────────────────
+function setStatus(state, text) {
+  const pill = document.getElementById('statusPill');
+  const span = document.getElementById('statusText');
+  span.textContent = text;
+
+  const classes = {
+    disconnected: 'bg-light text-secondary',
+    scanning:     'bg-warning text-dark',
+    connected:    'bg-success text-white',
+    error:        'bg-danger text-white',
+  };
+  const icons = {
+    disconnected: 'bi-bluetooth-disabled',
+    scanning:     'bi-bluetooth-searching',
+    connected:    'bi-bluetooth-connected',
+    error:        'bi-exclamation-triangle-fill',
+  };
+
+  pill.className = 'status-pill w-100 justify-content-center ' + (classes[state] || classes.disconnected);
+  const iconEl = pill.querySelector('i') || pill.insertBefore(document.createElement('i'), pill.firstChild);
+  iconEl.className = 'bi ' + (icons[state] || icons.disconnected) + ' fs-5';
+}
+
+function setMainBtn(loading, text) {
+  const btn = document.getElementById('mainConnBtn');
+  const icon = document.getElementById('mainBtnIcon');
+  const label = document.getElementById('mainBtnText');
+  btn.disabled = loading;
+  if (loading) {
+    icon.className = 'bi bi-hourglass-split';
+    label.textContent = text || 'Connecting...';
+  } else {
+    icon.className = 'bi bi-bluetooth';
+    label.textContent = '🔍 SCAN & CONNECT TO HC-05';
+  }
+}
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  document.getElementById('errorMsg').textContent = msg;
+  box.classList.remove('d-none');
+}
+function hideError() {
+  document.getElementById('errorBox').classList.add('d-none');
+}
+
+// ── Read serial stream from HC-05 ────────────────────────────────────
+async function startReading() {
+  const decoder = new TextDecoderStream();
+  const pipe = serialPort.readable.pipeTo(decoder.writable);
+  serialReader = decoder.readable.getReader();
+
+  try {
+    while (serialReadActive) {
+      const { value, done } = await serialReader.read();
+      if (done) break;
+      if (value) {
+        lineBuffer += value;
+        const lines = lineBuffer.split('\n');
+        lineBuffer = lines.pop();
+        for (const line of lines) {
+          const t = line.trim();
+          if (t) { logSerial('← ' + t); parseLine(t); }
+        }
+      }
+    }
+  } catch (e) {
+    if (serialReadActive) {
+      logSerial('⚠️ Stream error: ' + e.message);
+      disconnectSerial();
+    }
+  } finally {
+    serialReader = null;
+  }
+}
+
+function parseLine(line) {
+  const m = line.match(/^PRODUCT:([A-Fa-f0-9]+)$/i);
+  if (!m) return;
+  const uid = m[1].toUpperCase();
+  const now = Date.now();
+  if (uid === lastUID && now - lastScanTime < COOLDOWN_MS) return;
+  lastUID = uid;
+  lastScanTime = now;
+  logSerial(`✅ RFID UID: ${uid} — fetching product...`);
+  fetchProduct(uid);
+}
+
+function logSerial(msg) {
+  const box = document.getElementById('logBox');
+  const ts = new Date().toLocaleTimeString();
+  box.innerHTML += `<div>[${ts}] ${msg}</div>`;
+  box.scrollTop = box.scrollHeight;
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  PRODUCT LOOKUP
+// ════════════════════════════════════════════════════════════════════
+async function fetchProduct(uid) {
+  try {
+    const res = await fetch(`/api/products/rfid/${uid}`);
+    const data = await res.json();
+    if (!res.ok) {
+      logSerial(`✗ UID ${uid} not registered: ${data.detail?.message || 'Not found'}`);
+      return;
+    }
+    logSerial(`✓ ${data.product.name} — Grade ${data.eco_score.grade} (${data.eco_score.value}/100)`);
+    renderResult(data);
+  } catch(e) {
+    logSerial('⚠️ API error: ' + e.message);
+  }
+}
+
+function renderResult(d) {
+  const sec = document.getElementById('resultSection');
+  sec.style.display = 'block';
+
+  document.getElementById('prodName').textContent = d.product.name;
+  document.getElementById('prodCategory').textContent = d.product.category;
+  document.getElementById('prodDataStatus').textContent = d.data_status;
+  document.getElementById('prodSub').textContent = `${d.product.brand} · ${d.product.material}`;
+
+  const score = d.eco_score.value;
+  const grade = d.eco_score.grade;
+  const color = score >= 80 ? '#0F5132' : score >= 60 ? '#D97706' : '#DC3545';
+  const bgCls = score >= 80 ? 'bg-success' : score >= 60 ? 'bg-warning text-dark' : 'bg-danger';
+
+  document.getElementById('scoreVal').textContent = Math.round(score);
+  document.getElementById('scoreVal').style.color = color;
+  document.getElementById('scoreRing').style.borderColor = color;
+  document.getElementById('gradeBadge').textContent = `GRADE ${grade}`;
+  document.getElementById('gradeBadge').className = `grade-badge ${bgCls}`;
+  document.getElementById('decisionText').textContent = d.eco_score.decision;
+  document.getElementById('decisionText').style.color = color;
+  document.getElementById('explanationText').textContent = d.eco_score.explanation;
+
+  if (d.ai_insight) {
+    document.getElementById('aiSource').textContent = d.ai_insight.source || 'Gemini AI';
+    document.getElementById('aiInsightText').textContent = d.ai_insight.summary || d.ai_insight.why_this_score || '';
+    const impUl = document.getElementById('aiImpactList'); impUl.innerHTML = '';
+    (d.ai_insight.impact_drivers || []).forEach(x => impUl.innerHTML += `<li>${x}</li>`);
+    const actUl = document.getElementById('aiIdeasList'); actUl.innerHTML = '';
+    const acts = d.ai_insight.actions || {};
+    Object.keys(acts).forEach(k => { if(acts[k]) actUl.innerHTML += `<li><strong>${k.toUpperCase()}:</strong> ${acts[k]}</li>`; });
+  }
+
+  const env = d.environment;
+  document.getElementById('carbonVal').textContent = `${env.carbon.value} ${env.carbon.unit}`;
+  document.getElementById('waterVal').textContent = `${env.water.value} ${env.water.unit}`;
+  document.getElementById('pkgVal').textContent = env.packaging;
+  document.getElementById('recycVal').textContent = `${env.recyclability}%`;
+  document.getElementById('reuseVal').textContent = `${env.reuse_potential}% (${env.lifespan_days} days)`;
+
+  const comp = d.eco_score.components;
+  document.getElementById('carbonBar').style.width = `${comp.carbon}%`;
+  document.getElementById('waterBar').style.width = `${comp.water}%`;
+  document.getElementById('pkgBar').style.width = `${comp.packaging}%`;
+  document.getElementById('recycBar').style.width = `${comp.recyclability}%`;
+  document.getElementById('reuseBar').style.width = `${comp.reuse}%`;
+
+  if (d.better_alternative) {
+    document.getElementById('altCard').style.display = 'block';
+    document.getElementById('altName').textContent = d.better_alternative.product_name;
+    document.getElementById('altReason').textContent = d.better_alternative.reason;
+  } else {
+    document.getElementById('altCard').style.display = 'none';
+  }
+
+  sec.scrollIntoView({ behavior: 'smooth' });
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  RFID TAG MANAGEMENT
+// ════════════════════════════════════════════════════════════════════
+async function loadRfidTags() {
+  try {
+    const res = await fetch('/api/rfid');
+    const tags = await res.json();
+    const tbody = document.getElementById('rfidTableBody');
+    tbody.innerHTML = '';
+    if (!tags.length) { tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No tags registered.</td></tr>'; return; }
+    tags.forEach(t => {
+      const assigned = t.status === 'ASSIGNED';
+      tbody.innerHTML += `<tr>
+        <td class="fw-bold">${t.rfid_uid}</td>
+        <td><span class="badge ${assigned ? 'bg-success' : 'bg-warning text-dark'}">${t.status}</span></td>
+        <td>${t.product_name || '<em class="text-muted">—</em>'}</td>
+        <td>
+          ${assigned ? `<button class="btn btn-sm btn-outline-warning me-1" onclick="unassignRfid('${t.rfid_uid}')">Unassign</button>` : ''}
+          <button class="btn btn-sm btn-outline-danger" onclick="deleteRfidTag('${t.rfid_uid}')"><i class="bi bi-trash"></i></button>
+        </td>
+      </tr>`;
+    });
+  } catch(e) {}
+}
+
+async function unassignRfid(uid) {
+  if (!confirm(`Unassign RFID Tag ${uid}?`)) return;
+  await fetch(`/api/rfid/${uid}/unassign`, { method: 'POST' });
+  loadRfidTags();
+}
+async function deleteRfidTag(uid) {
+  if (!confirm(`Delete RFID Tag ${uid}?`)) return;
+  await fetch(`/api/rfid/${uid}`, { method: 'DELETE' });
+  loadRfidTags();
+}
+async function submitRegisterRfid() {
+  const uid = document.getElementById('newRfidUid').value.trim();
+  if (!uid) return;
+  const res = await fetch('/api/rfid', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({rfid_uid: uid}) });
+  if (res.ok) {
+    bootstrap.Modal.getInstance(document.getElementById('registerRfidModal')).hide();
+    document.getElementById('newRfidUid').value = '';
+    loadRfidTags();
+  } else {
+    const e = await res.json();
+    alert(e.detail?.error || 'Registration failed');
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  PRODUCT CATALOG & AI SEARCH
+// ════════════════════════════════════════════════════════════════════
+async function loadProducts() {
+  const banner = document.getElementById('aiSearchBanner');
+  if (banner) banner.classList.add('d-none');
+  const input = document.getElementById('aiSearchInput');
+  if (input) input.value = '';
+
+  try {
+    const res = await fetch('/api/products');
+    const prods = await res.json();
+    renderProductTable(prods);
+  } catch(e) {
+    console.error("Error loading products:", e);
+  }
+}
+
+async function executeAiSearch() {
+  const query = document.getElementById('aiSearchInput').value.trim();
+  if (!query) {
+    loadProducts();
+    return;
+  }
+
+  const tbody = document.getElementById('productTableBody');
+  tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Searching with Gemini AI...</td></tr>';
+
+  try {
+    const res = await fetch(`/api/products/search?q=${encodeURIComponent(query)}`);
+    const data = await res.json();
+
+    // Render Banner Explanation
+    const banner = document.getElementById('aiSearchBanner');
+    const title = document.getElementById('aiBannerTitle');
+    const detail = document.getElementById('aiBannerDetail');
+    const badge = document.getElementById('aiBannerBadge');
+
+    if (banner) {
+      banner.classList.remove('d-none');
+      title.textContent = `Search Query: "${data.query}" (${data.total} results found)`;
+      detail.textContent = data.explanation || `Filtered results based on natural language analysis.`;
+      badge.textContent = data.ai_powered ? "✨ Gemini AI Engine" : "⚡ Fast Engine";
+      badge.className = data.ai_powered ? "badge bg-primary" : "badge bg-secondary";
+    }
+
+    renderProductTable(data.results || []);
+  } catch(e) {
+    console.error("AI Search Error:", e);
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Search failed: ${e.message}</td></tr>`;
+  }
+}
+
+function setQuickSearch(term) {
+  document.getElementById('aiSearchInput').value = term;
+  executeAiSearch();
+}
+
+function resetAiSearch() {
+  document.getElementById('aiSearchInput').value = '';
+  loadProducts();
+}
+
+function renderProductTable(prods) {
+  const tbody = document.getElementById('productTableBody');
+  tbody.innerHTML = '';
+
+  if (!prods || !prods.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-search display-6 d-block mb-2 text-secondary"></i>No matching products found. Try adjusting your search query.</td></tr>';
+    return;
+  }
+
+  prods.forEach(p => {
+    const score = p.eco_score || 0;
+    const grade = p.eco_grade || 'C';
+    const gradeClass = score >= 80 ? 'bg-success' : score >= 60 ? 'bg-warning text-dark' : 'bg-danger';
+
+    tbody.innerHTML += `<tr>
+      <td>
+        <strong class="text-dark">${p.product_name}</strong><br>
+        <span class="text-muted small"><i class="bi bi-building me-1"></i>${p.brand}</span>
+      </td>
+      <td>
+        <span class="badge bg-secondary mb-1">${p.category}</span><br>
+        <span class="text-secondary small"><i class="bi bi-box me-1"></i>${p.material}</span>
+      </td>
+      <td>
+        <span class="fw-bold text-dark">${p.carbon_footprint}</span> <small class="text-muted">kg CO2e</small>
+      </td>
+      <td>
+        <span class="fw-bold text-dark">${p.water_footprint}</span> <small class="text-muted">litres</small>
+      </td>
+      <td>
+        <span class="badge ${gradeClass} px-2 py-1">Grade ${grade} (${score})</span>
+      </td>
+      <td>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(${p.id})"><i class="bi bi-trash"></i></button>
+      </td>
+    </tr>`;
+  });
+}
+
+async function submitAddProduct() {
+  const payload = {
+    product_name: document.getElementById('npName').value,
+    brand:        document.getElementById('npBrand').value,
+    category:     document.getElementById('npCat').value,
+    material:     document.getElementById('npMat').value,
+    packaging:    document.getElementById('npPkg').value,
+    carbon_footprint: parseFloat(document.getElementById('npCarbon').value) || 0.1,
+    water_footprint:  parseFloat(document.getElementById('npWater').value) || 1.0,
+    recyclability:    parseFloat(document.getElementById('npRecyc').value) || 80,
+    reuse_potential:  parseFloat(document.getElementById('npReuse').value) || 70,
+    lifespan:         parseInt(document.getElementById('npLifespan').value) || 365,
+    data_status: 'VERIFIED REAL DATA'
+  };
+  const res = await fetch('/api/products', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  if (res.ok) { bootstrap.Modal.getInstance(document.getElementById('addProductModal')).hide(); loadProducts(); }
+  else alert('Failed to save product.');
+}
+
+async function deleteProduct(id) {
+  if (!confirm('Delete this product?')) return;
+  await fetch(`/api/products/${id}`, { method: 'DELETE' });
+  loadProducts();
+}
+</script>
+</body>
+</html>
