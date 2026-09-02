@@ -1,12 +1,12 @@
 buildscript {
-    ext.kotlin_version = '1.9.20'
+    ext.kotlin_version = '1.8.22'
     repositories {
         google()
         mavenCentral()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.1.0'
+        classpath 'com.android.tools.build:gradle:7.4.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -26,18 +26,13 @@ subprojects {
     project.evaluationDependsOn(':app')
 }
 
-// Subproject namespace patch for legacy packages (flutter_bluetooth_serial)
+// Ensure legacy subprojects (like flutter_bluetooth_serial) get correct namespace
 subprojects { subproject ->
     subproject.pluginManager.withPlugin('com.android.library') {
         try {
-            if (subproject.android.namespace == null) {
-                subproject.android.namespace = "com.ecomind.${subproject.name.replace('-', '_')}"
-            }
-        } catch (Exception ignored) {}
-    }
-    subproject.pluginManager.withPlugin('com.android.application') {
-        try {
-            if (subproject.android.namespace == null) {
+            if (subproject.name.contains('flutter_bluetooth_serial')) {
+                subproject.android.namespace = 'io.github.edufolly.flutterbluetoothserial'
+            } else if (subproject.android.namespace == null) {
                 subproject.android.namespace = "com.ecomind.${subproject.name.replace('-', '_')}"
             }
         } catch (Exception ignored) {}
