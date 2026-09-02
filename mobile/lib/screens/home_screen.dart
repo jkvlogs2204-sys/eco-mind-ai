@@ -89,7 +89,7 @@ class HomeDashboardTab extends StatelessWidget {
               color: AppTheme.primaryGreen,
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
               child: Column(
-                crossAlignment: CrossAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -219,7 +219,7 @@ class HomeDashboardTab extends StatelessWidget {
                     const Text(
                       "Connect your Eco Scanner and scan a product to discover its environmental impact.",
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.black64, fontSize: 14),
+                      style: TextStyle(color: Colors.black54, fontSize: 14),
                     ),
                     const SizedBox(height: 20),
                     SizedBox(
@@ -315,7 +315,7 @@ class HomeDashboardTab extends StatelessWidget {
                           icon: Icons.menu_book,
                           title: "Learn",
                           subtitle: "SDG 12 Topics",
-                          color: Colors.emeraldAccent.shade700,
+                          color: Colors.green.shade700,
                           onTap: () {
                             Navigator.push(
                               context,
@@ -374,7 +374,7 @@ class HomeDashboardTab extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            crossAlignment: CrossAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
                 backgroundColor: color.withOpacity(0.15),

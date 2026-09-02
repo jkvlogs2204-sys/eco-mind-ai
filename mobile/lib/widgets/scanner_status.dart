@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/bluetooth_service.dart';
-import '../screens/bluetooth_screen.dart';
+import '../screens/bluetooth_connection_screen.dart';
 
 class ScannerStatusWidget extends StatelessWidget {
   const ScannerStatusWidget({super.key});
@@ -41,7 +41,7 @@ class ScannerStatusWidget extends StatelessWidget {
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
                         "Scanner Status",
@@ -82,7 +82,7 @@ class ScannerStatusWidget extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const BluetoothScreen()),
+                      MaterialPageRoute(builder: (_) => const BluetoothConnectionScreen()),
                     );
                   },
                   child: Text(

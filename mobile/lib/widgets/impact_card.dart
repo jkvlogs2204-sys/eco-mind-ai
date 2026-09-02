@@ -20,7 +20,7 @@ class EnvironmentalImpactWidget extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(18.0),
         child: Column(
-          crossAxisAlignment: CrossAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
               "ENVIRONMENTAL IMPACT",
@@ -85,7 +85,7 @@ class EnvironmentalImpactWidget extends StatelessWidget {
     required Color color,
   }) {
     return Column(
-      crossAxisAlignment: CrossAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [

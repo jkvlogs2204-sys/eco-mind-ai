@@ -24,6 +24,41 @@ class EcoComponentScoresModel {
   }
 }
 
+typedef ComponentScoresModel = EcoComponentScoresModel;
+typedef ComponentScores = EcoComponentScoresModel;
+
+class BetterAlternativeModel {
+  final int id;
+  final String productName;
+  final String brand;
+  final String category;
+  final double ecoScore;
+  final String ecoGrade;
+  final String reason;
+
+  BetterAlternativeModel({
+    required this.id,
+    required this.productName,
+    required this.brand,
+    required this.category,
+    required this.ecoScore,
+    required this.ecoGrade,
+    required this.reason,
+  });
+
+  factory BetterAlternativeModel.fromJson(Map<String, dynamic> json) {
+    return BetterAlternativeModel(
+      id: json['id'] ?? 0,
+      productName: json['product_name'] ?? json['productName'] ?? '',
+      brand: json['brand'] ?? '',
+      category: json['category'] ?? '',
+      ecoScore: (json['eco_score'] ?? json['ecoScore'] ?? 0.0).toDouble(),
+      ecoGrade: json['eco_grade'] ?? json['ecoGrade'] ?? 'A',
+      reason: json['reason'] ?? '',
+    );
+  }
+}
+
 class GeminiInsightModel {
   final String summary;
   final String whyThisScore;
@@ -74,6 +109,7 @@ class EcoScoreAnalysisModel {
   final String decision;
   final String explanation;
   final EcoComponentScoresModel components;
+  final BetterAlternativeModel? betterAlternative;
 
   EcoScoreAnalysisModel({
     required this.ecoScore,
@@ -81,15 +117,22 @@ class EcoScoreAnalysisModel {
     required this.decision,
     required this.explanation,
     required this.components,
+    this.betterAlternative,
   });
 
   factory EcoScoreAnalysisModel.fromJson(Map<String, dynamic> json) {
+    BetterAlternativeModel? alt;
+    if (json['better_alternative'] != null && json['better_alternative'] is Map) {
+      alt = BetterAlternativeModel.fromJson(Map<String, dynamic>.from(json['better_alternative']));
+    }
+
     return EcoScoreAnalysisModel(
       ecoScore: (json['value'] ?? json['eco_score'] ?? 0.0).toDouble(),
       grade: json['grade'] ?? 'C',
       decision: json['decision'] ?? 'MODERATE IMPACT',
       explanation: json['explanation'] ?? '',
       components: EcoComponentScoresModel.fromJson(json['components'] ?? {}),
+      betterAlternative: alt,
     );
   }
 }

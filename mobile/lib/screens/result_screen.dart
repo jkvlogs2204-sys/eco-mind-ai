@@ -45,7 +45,7 @@ class ResultScreen extends StatelessWidget {
           return SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Column(
-              crossAlignment: CrossAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header Product Banner
                 Container(
@@ -53,7 +53,7 @@ class ResultScreen extends StatelessWidget {
                   color: AppTheme.primaryGreen,
                   padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
                   child: Column(
-                    crossAlignment: CrossAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -127,7 +127,7 @@ class ResultScreen extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(18.0),
                     child: Column(
-                      crossAlignment: CrossAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -184,7 +184,7 @@ class ResultScreen extends StatelessWidget {
                           ...geminiInsight.impactDrivers.map((d) => Padding(
                                 padding: const EdgeInsets.only(bottom: 4.0),
                                 child: Row(
-                                  crossAlignment: CrossAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const Text("• ", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
                                     Expanded(child: Text(d, style: const TextStyle(fontSize: 12, color: Colors.black87))),
@@ -204,7 +204,7 @@ class ResultScreen extends StatelessWidget {
                           ...geminiInsight.positiveFactors.map((p) => Padding(
                                 padding: const EdgeInsets.only(bottom: 4.0),
                                 child: Row(
-                                  crossAlignment: CrossAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const Text("✓ ", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
                                     Expanded(child: Text(p, style: const TextStyle(fontSize: 12, color: Colors.black87))),
@@ -239,7 +239,7 @@ class ResultScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Column(
-                              crossAlignment: CrossAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   children: const [
@@ -249,7 +249,7 @@ class ResultScreen extends StatelessWidget {
                                   ],
                                 ),
                                 const SizedBox(height: 2),
-                                Text(geminiInsight.disposalGuidance, style: const TextStyle(fontSize: 11, color: Colors.black70)),
+                                Text(geminiInsight.disposalGuidance, style: const TextStyle(fontSize: 11, color: Colors.black87)),
                                 const SizedBox(height: 6),
                                 Text(
                                   geminiInsight.confidenceNote,
@@ -271,7 +271,7 @@ class ResultScreen extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(14.0),
                     child: Column(
-                      crossAlignment: CrossAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: const [
                         Text(
                           "How EcoMind AI Works",
@@ -280,7 +280,7 @@ class ResultScreen extends StatelessWidget {
                         SizedBox(height: 4),
                         Text(
                           "RFID identifies product → EcoMind's deterministic scoring engine calculates official score → Gemini explains environmental implications & action ideas.",
-                          style: TextStyle(fontSize: 11, color: Colors.black64, height: 1.3),
+                          style: TextStyle(fontSize: 11, color: Colors.black54, height: 1.3),
                         ),
                       ],
                     ),
@@ -339,7 +339,7 @@ class ResultScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6.0),
       child: Row(
-        crossAlignment: CrossAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -406,7 +406,7 @@ class ResultScreen extends StatelessWidget {
             Text(
               error,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.black64),
+              style: const TextStyle(color: Colors.black54),
             ),
             const SizedBox(height: 24),
             ElevatedButton(

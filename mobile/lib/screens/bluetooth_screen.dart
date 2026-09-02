@@ -50,7 +50,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Status Card
             Card(
@@ -69,7 +69,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
-                        crossAxisAlignment: CrossAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             btService.isConnected

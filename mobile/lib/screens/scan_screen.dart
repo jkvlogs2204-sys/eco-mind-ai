@@ -83,7 +83,7 @@ class _ScanScreenState extends State<ScanScreen> {
                           const SizedBox(width: 14),
                           Expanded(
                             child: Column(
-                              crossAlignment: CrossAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   btService.isConnected
@@ -100,7 +100,7 @@ class _ScanScreenState extends State<ScanScreen> {
                                   btService.isConnected
                                       ? "Connected to ${btService.connectedDeviceName}. RFID Scanner Ready!"
                                       : "Tap here to connect your EcoMind RFID scanner.",
-                                  style: const TextStyle(fontSize: 12, color: Colors.black64),
+                                  style: const TextStyle(fontSize: 12, color: Colors.black54),
                                 ),
                               ],
                             ),

@@ -26,7 +26,7 @@ class _EcoScoreCardWidgetState extends State<EcoScoreCardWidget> with SingleTick
     _scoreAnimation = Tween<double>(
       begin: 0.0,
       end: widget.analysis.ecoScore,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.outCubic));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     _controller.forward();
   }
@@ -38,7 +38,7 @@ class _EcoScoreCardWidgetState extends State<EcoScoreCardWidget> with SingleTick
       _scoreAnimation = Tween<double>(
         begin: 0.0,
         end: widget.analysis.ecoScore,
-      ).animate(CurvedAnimation(parent: _controller, curve: Curves.outCubic));
+      ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
       _controller.forward(from: 0.0);
     }
   }
@@ -60,7 +60,7 @@ class _EcoScoreCardWidgetState extends State<EcoScoreCardWidget> with SingleTick
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -78,7 +78,7 @@ class _EcoScoreCardWidgetState extends State<EcoScoreCardWidget> with SingleTick
               const SizedBox(height: 8),
               const Text(
                 "Eco score is calculated using a transparent 5-factor weighted algorithm:",
-                style: TextStyle(fontSize: 13, color: Colors.black64),
+                style: TextStyle(fontSize: 13, color: Colors.black54),
               ),
               const SizedBox(height: 16),
               _buildFactorRow("Carbon Impact", "30%", widget.analysis.components.carbon, Colors.blue),

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../services/scan_service.dart';
 import '../services/bluetooth_service.dart';
 import '../theme/app_theme.dart';
-import 'bluetooth_screen.dart';
+import 'bluetooth_connection_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -49,7 +49,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
-                crossAxisAlignment: CrossAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text("Eco Decision Engine Base URL", style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 6),
@@ -100,7 +100,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const BluetoothScreen()),
+                  MaterialPageRoute(builder: (_) => const BluetoothConnectionScreen()),
                 );
               },
             ),
@@ -115,7 +115,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
-                crossAxisAlignment: CrossAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
                   Text("EcoMind AI System — Part 3", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   SizedBox(height: 6),

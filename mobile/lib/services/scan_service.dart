@@ -15,7 +15,7 @@ enum ScanState {
 }
 
 class ScanService extends ChangeNotifier {
-  final ApiService apiService;
+  late final ApiService apiService;
   BluetoothService? _bluetoothService;
   StreamSubscription<String>? _rfidSubscription;
 
@@ -27,12 +27,31 @@ class ScanService extends ChangeNotifier {
   String? _scannedUid;
   String? _errorMessage;
 
+  List<dynamic> _history = [];
+  List<dynamic> get history => _history;
+
   // Duplicate Scan Cooldown Protection
   String? _lastScannedUid;
   DateTime? _lastScanTime;
   final Duration _debounceCooldown = const Duration(milliseconds: 2500);
 
-  ScanService({required this.apiService});
+  ScanService([dynamic arg1, dynamic arg2]) {
+    if (arg1 is ApiService) {
+      apiService = arg1;
+    } else if (arg1 is BluetoothService) {
+      _bluetoothService = arg1;
+      apiService = arg2 is ApiService ? arg2 : ApiService();
+      attachBluetoothService(_bluetoothService!);
+    } else {
+      apiService = ApiService();
+    }
+  }
+
+  ScanService.withApi({required this.apiService, BluetoothService? bluetoothService}) {
+    if (bluetoothService != null) {
+      attachBluetoothService(bluetoothService);
+    }
+  }
 
   ScanState get state => _state;
   ProductModel? get currentProduct => _currentProduct;
@@ -52,20 +71,26 @@ class ScanService extends ChangeNotifier {
     final cleanUid = uid.trim().toUpperCase().replaceAll(' ', '').replaceAll(':', '');
     if (cleanUid.isEmpty) return;
 
-    // Check Duplicate Scan Cooldown
     final now = DateTime.now();
     if (_lastScannedUid == cleanUid && _lastScanTime != null) {
       if (now.difference(_lastScanTime!) < _debounceCooldown) {
-        return; // Suppress duplicate scan within 2.5s cooldown window
+        return;
       }
     }
 
     _lastScannedUid = cleanUid;
     _lastScanTime = now;
-
-    // Trigger zero-tap automated analysis pipeline
     processRfidScan(cleanUid);
   }
+
+  Future<void> fetchHistory() async {
+    try {
+      _history = await apiService.getScanHistory();
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  Future<void> analyzeProductByRfid(String uid) => processRfidScan(uid);
 
   Future<void> processRfidScan(String rawRfidUid) async {
     final cleanUid = rawRfidUid.trim().toUpperCase().replaceAll(' ', '').replaceAll(':', '');
@@ -107,9 +132,7 @@ class ScanService extends ChangeNotifier {
       _betterAlternative = result['better_alternative'];
       _state = ScanState.success;
 
-      // Automatically log scan history
       apiService.recordScan(cleanUid);
-
       notifyListeners();
     } catch (e) {
       _state = ScanState.error;
