@@ -27,15 +27,20 @@ subprojects {
 }
 
 // Subproject namespace patch for legacy packages (flutter_bluetooth_serial)
-subprojects {
-    afterEvaluate { subproject ->
-        if (subproject.hasProperty('android')) {
-            subproject.android {
-                if (namespace == null) {
-                    namespace subproject.group ?: "com.ecomind.${subproject.name.replace('-', '_')}"
-                }
+subprojects { subproject ->
+    subproject.pluginManager.withPlugin('com.android.library') {
+        try {
+            if (subproject.android.namespace == null) {
+                subproject.android.namespace = "com.ecomind.${subproject.name.replace('-', '_')}"
             }
-        }
+        } catch (Exception ignored) {}
+    }
+    subproject.pluginManager.withPlugin('com.android.application') {
+        try {
+            if (subproject.android.namespace == null) {
+                subproject.android.namespace = "com.ecomind.${subproject.name.replace('-', '_')}"
+            }
+        } catch (Exception ignored) {}
     }
 }
 
